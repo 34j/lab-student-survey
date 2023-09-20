@@ -18,9 +18,6 @@ from scipy.stats import pearsonr
 
 LIKERT_SCALE = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
 
-matplotlib.style.use(matplotx.styles.dracula)
-matplotlib.rcParams["font.family"] = "Yu Gothic"
-
 
 LOG = getLogger(__name__)
 
@@ -29,8 +26,8 @@ def export_multiple_frames_to_html(
     dfs: list[pd.DataFrame | pd.Series | str | Figure], path: Path | str
 ) -> None:
     dfs = [df.to_frame() if isinstance(df, pd.Series) else df for df in dfs]
-    with open(path, "w") as f:
-        f.write("<html><body>")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("<html><meta charset='UTF-8'><body>")
         for df in dfs:
             if isinstance(df, str):
                 f.write(f"<h2>{df}</h2>")
@@ -46,14 +43,18 @@ def export_multiple_frames_to_html(
                         f"{base64.b64encode(buf.getvalue()).decode('utf-8')}'/>"
                     )
             else:
-                f.write(df.to_html())
+                # replace \n with <br> tag
+                f.write(df.to_html().replace("\\n", "<br>"))
         f.write("</body></html>")
 
 
 def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
+    matplotlib.style.use(matplotx.styles.dracula)
+    matplotlib.rcParams["font.family"] = "Yu Gothic"
+
     with StringIO(csv_content) as f:
         df = pd.read_csv(f, index_col=[2], header=0)
-    df.drop(columns=["タイムスタンプ"])
+    df = df.drop(columns=["タイムスタンプ"])
     df = df.sort_index(axis=0)
 
     # get metadata
@@ -79,11 +80,11 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
         for i, group_name in group_names.iterrows():
             df_meta.loc[df_meta["group"] == i, "group"] = group_name[1]
 
-    # extract likert scale questions
+    # extract likert scale questions and numerical columns
     likert_cols = df_meta["group"].notna()
-    df_likert = df.loc[:, likert_cols]
-    df_free = df.loc[:, ~likert_cols]
-    df_likert_meta = df_meta[likert_cols]
+    df_likert = df.loc[:, likert_cols].copy()
+    df_free = df.loc[:, ~likert_cols].copy()
+    df_likert_meta = df_meta[likert_cols].copy()
 
     # convert likert scale to numerical values
     for i, likert_scale in enumerate(LIKERT_SCALE):
@@ -93,20 +94,25 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
         df_likert.loc[:, ~df_likert_meta["higher_is_better"]] - 1
     )
 
-    # group by question groups
-    # df_grouped = df_likert.groupby(df_likert_meta["group"], axis=1)
-    # calculate mean and std for each group
-
     # multiindex by group and question
     df_likert.columns = pd.MultiIndex.from_frame(
         pd.DataFrame({"group": df_likert_meta["group"], "question": df_likert.columns})
     )
+    df_numeral = df.select_dtypes(include="number")
+    df_numeral_columns = df_numeral.columns
+    df_numeral.columns = pd.MultiIndex.from_frame(
+        pd.DataFrame({"group": df_numeral.columns, "question": df_numeral.columns})
+    )
+    df_likert = pd.concat([df_likert, df_numeral], axis=1, join="outer")
+
     # calculate mean and std for each group per row
     df_likert_grouped = df_likert.groupby(level="group", axis=1, sort=False)
     df_likert_mean = df_likert_grouped.mean()
-    df_likert_mean["mean"] = df_likert_mean.mean(axis=1)
+    df_likert_mean["mean"] = df_likert_mean.drop(columns=df_numeral_columns).mean(
+        axis=1
+    )
     df_likert_std = df_likert_grouped.std()
-    df_likert_std["mean"] = df_likert_std.mean(axis=1)
+    df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(axis=1)
 
     # calculate corr
     df_likert_mean_corr = df_likert_mean.corr()
@@ -126,6 +132,12 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
     df_likert_std_colwise = df_likert_grouped_colwise.std().mean(axis=1).rename("std")
 
     def _parse_cronbach_alpha(x: pd.Series) -> dict[str, object]:
+        if x.shape[1] <= 1:
+            return {
+                "alpha": float("nan"),
+                "alpha_0.95": float("nan"),
+                "internal_consistency": "N/A",
+            }
         a = pg.cronbach_alpha(x)
         internal_consistency = {
             0.9: "Excellent",
@@ -165,7 +177,7 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
         "<h1>分析結果</h1>" f"最終更新: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "自由記述",
         df_free,
-        "回答ごとのグループに関する平均",
+        "回答ごとのグループに関する平均（質問によって、良い方向の回答が高い値になるように変換しております）",
         df_likert_mean.round(2),
         "グループに関する平均の相関",
         df_likert_mean_corr.round(2),
