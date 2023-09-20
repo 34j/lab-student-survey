@@ -13,8 +13,14 @@ import numpy as np
 import pandas as pd
 import pingouin as pg
 import seaborn as sns
+import sklearn
+import sklearn.cluster
 from matplotlib.figure import Figure
 from scipy.stats import pearsonr
+from sklearn.discriminant_analysis import StandardScaler
+from sklearn.manifold import MDS, TSNE
+
+sklearn.set_config(transform_output="pandas")
 
 LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
 TIMESTAMP_TEXT = "タイムスタンプ"
@@ -46,6 +52,19 @@ def export_multiple_frames_to_html(
                 # replace \n with <br> tag
                 f.write(df.to_html().replace("\\n", "<br>"))
         f.write("</body></html>")
+
+
+def find_best_k(
+    X: pd.DataFrame, max_k: int = 10
+) -> tuple[int, list[float], sklearn.cluster.KMeans]:
+    scores = []
+    models = []
+    for k in range(1, max_k + 1):
+        model = sklearn.cluster.KMeans(n_clusters=k)
+        model.fit(X)
+        scores.append(model.inertia_)
+        models.append(model)
+    return np.argmin(scores) + 1, scores, models[np.argmin(scores)]
 
 
 def analyze(
@@ -107,6 +126,30 @@ def analyze(
             pd.DataFrame({"group": df_numeral.columns, "question": df_numeral.columns})
         )
         df_likert = pd.concat([df_likert, df_numeral], axis=1, join="outer")
+
+    # clustering
+    df_likert_dropna = df_likert.dropna(axis=1)
+    df_likert_dropna = StandardScaler().fit_transform(df_likert_dropna)
+    best_k, scores, cluster_model = find_best_k(df_likert_dropna)
+    fig_c_elbow, ax = plt.subplots(figsize=(10, 10))
+    ax.set_title("Elbow method for optimal k")
+    ax.plot(range(1, len(scores) + 1), scores)
+
+    fig_c_scatters = []
+    for j, embedding in enumerate(
+        [MDS(n_components=2), TSNE(n_components=2, perplexity=20)]
+    ):
+        emb_res = pd.DataFrame(
+            embedding.fit_transform(df_likert_dropna), index=df_likert_dropna.index
+        )
+        emb_res["cluster"] = cluster_model.predict(df_likert_dropna)
+        fig_c_scatter, ax = plt.subplots(figsize=(10, 10))
+        fig_c_scatters.append(fig_c_scatter)
+        ax.set_title(f"Scatter plot of {embedding.__class__.__name__}")
+        # annotate index
+        sns.scatterplot(data=emb_res, x=0, y=1, hue="cluster", ax=ax)
+        for i, row in emb_res.iterrows():
+            ax.annotate(i, (row[0], row[1]))
 
     # calculate mean and std for each group per row
     df_likert_grouped = df_likert.groupby(level="group", axis=1, sort=False)
@@ -186,6 +229,9 @@ def analyze(
         df_free,
         "回答ごとのグループに関する平均（質問によって、良い方向の回答が高い値になるように変換しております）",
         df_likert_mean.round(2),
+        "クラスタリング（失敗）",
+        fig_c_elbow,
+        *fig_c_scatters,
         "グループに関する平均の相関",
         df_likert_mean_corr.round(2),
         fig_corr,
