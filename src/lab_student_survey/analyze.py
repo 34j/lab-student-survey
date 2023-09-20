@@ -16,8 +16,8 @@ import seaborn as sns
 from matplotlib.figure import Figure
 from scipy.stats import pearsonr
 
-LIKERT_SCALE = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
-
+LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
+TIMESTAMP_TEXT = "タイムスタンプ"
 
 LOG = getLogger(__name__)
 
@@ -56,7 +56,7 @@ def analyze(
 
     with StringIO(csv_content) as f:
         df = pd.read_csv(f, index_col=[2], header=0)
-    df = df.drop(columns=["タイムスタンプ"])
+    df = df.drop(columns=[TIMESTAMP_TEXT])
     df = df.sort_index(axis=0)
 
     # get metadata
@@ -89,10 +89,10 @@ def analyze(
     df_likert_meta = df_meta[likert_cols].copy()
 
     # convert likert scale to numerical values
-    for i, likert_scale in enumerate(LIKERT_SCALE):
-        df_likert = df_likert.replace(likert_scale, len(LIKERT_SCALE) - i)
+    for i, likert_scale in enumerate(LIKERT_SCALE_TEXTS):
+        df_likert = df_likert.replace(likert_scale, len(LIKERT_SCALE_TEXTS) - i)
     df_likert = df_likert.astype(int)
-    df_likert.loc[:, ~df_likert_meta["higher_is_better"]] = len(LIKERT_SCALE) - (
+    df_likert.loc[:, ~df_likert_meta["higher_is_better"]] = len(LIKERT_SCALE_TEXTS) - (
         df_likert.loc[:, ~df_likert_meta["higher_is_better"]] - 1
     )
 
