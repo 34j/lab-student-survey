@@ -30,6 +30,7 @@ numpy = "^1.26.0"
 pingouin = "^0.5.3"
 click = "^8.1.7"
 pydrive2 = "^1.17.0"
+matplotx = "^0.3.10"
 
 [tool.poetry.scripts]
 labo-student-survey = "lab_student_survey.cli:main"
