@@ -30,7 +30,19 @@
   <img src="https://img.shields.io/pypi/l/lab-student-survey.svg?style=flat-square" alt="License">
 </p>
 
-Python package for lab student survey
+Python package for lab student survey.
+
+## Usage
+
+- Create `student-lab-survey` (or any name) project in Google Cloud Platform.
+- Enable `Google Drive API` in Google Cloud Platform.
+- Create a `Service Account` in Google Cloud Platform.
+- Download the `Service Account` credentials as JSON in Google Cloud Platform and save it as `service-secrets.json` in the working directory. (not `service_secrets.json`)
+- Create `student-lab-survey` (or any name) folder in Google Drive.
+- Add the `Service Account` email to the `student-lab-survey` folder with `Editor` permissions.
+- Create a `Google Form` for the lab student survey. The second question should be the name of the supervisor.
+- Create a `Google Sheet` in the `student-lab-survey` folder from the `Google Form`.
+- Create `metadata.csv` and `metadata_group_name.csv` in the working directory to specify the question groups. The former will be automatically generated if it does not exist. The latter is optional.
 
 ## Installation
 
