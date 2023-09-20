@@ -48,7 +48,9 @@ def export_multiple_frames_to_html(
         f.write("</body></html>")
 
 
-def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
+def analyze(
+    csv_content: str, *, out_path: Path | str = "output.html", add_numeral: bool = True
+) -> None:
     matplotlib.style.use(matplotx.styles.dracula)
     matplotlib.rcParams["font.family"] = "Yu Gothic"
 
@@ -98,21 +100,26 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
     df_likert.columns = pd.MultiIndex.from_frame(
         pd.DataFrame({"group": df_likert_meta["group"], "question": df_likert.columns})
     )
-    df_numeral = df.select_dtypes(include="number")
-    df_numeral_columns = df_numeral.columns
-    df_numeral.columns = pd.MultiIndex.from_frame(
-        pd.DataFrame({"group": df_numeral.columns, "question": df_numeral.columns})
-    )
-    df_likert = pd.concat([df_likert, df_numeral], axis=1, join="outer")
+    if add_numeral:
+        df_numeral = df.select_dtypes(include="number")
+        df_numeral_columns = df_numeral.columns
+        df_numeral.columns = pd.MultiIndex.from_frame(
+            pd.DataFrame({"group": df_numeral.columns, "question": df_numeral.columns})
+        )
+        df_likert = pd.concat([df_likert, df_numeral], axis=1, join="outer")
 
     # calculate mean and std for each group per row
     df_likert_grouped = df_likert.groupby(level="group", axis=1, sort=False)
     df_likert_mean = df_likert_grouped.mean()
-    df_likert_mean["mean"] = df_likert_mean.drop(columns=df_numeral_columns).mean(
-        axis=1
-    )
+    if add_numeral:
+        df_likert_mean["mean"] = df_likert_mean.drop(columns=df_numeral_columns).mean(
+            axis=1
+        )
     df_likert_std = df_likert_grouped.std()
-    df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(axis=1)
+    if add_numeral:
+        df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(
+            axis=1
+        )
 
     # calculate corr
     df_likert_mean_corr = df_likert_mean.corr()
