@@ -23,7 +23,13 @@ packages = [
 "Changelog" = "https://github.com/34j/lab-student-survey/blob/main/CHANGELOG.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.9,<3.13"
+tqdm = "^4.66.1"
+pandas = "^2.1.0"
+numpy = "^1.26.0"
+pingouin = "^0.5.3"
+click = "^8.1.7"
+pydrive2 = "^1.17.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=3"
