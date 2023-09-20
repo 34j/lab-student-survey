@@ -31,6 +31,10 @@ pingouin = "^0.5.3"
 click = "^8.1.7"
 pydrive2 = "^1.17.0"
 
+[tool.poetry.scripts]
+labo-student-survey = "lab_student_survey.cli:main"
+lss = "lab_student_survey.cli:cli"
+
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=3"
 pytest = "^7.0"
