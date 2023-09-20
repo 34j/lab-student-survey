@@ -60,7 +60,7 @@ def find_best_k(
     scores = []
     models = []
     for k in range(1, max_k + 1):
-        model = sklearn.cluster.KMeans(n_clusters=k)
+        model = sklearn.cluster.KMeans(n_clusters=k, n_init="auto")
         model.fit(X)
         scores.append(model.inertia_)
         models.append(model)
@@ -75,6 +75,7 @@ def analyze(
 
     with StringIO(csv_content) as f:
         df = pd.read_csv(f, index_col=[2], header=0)
+    last_timestamp = df[TIMESTAMP_TEXT].max()
     df = df.drop(columns=[TIMESTAMP_TEXT])
     df = df.sort_index(axis=0)
 
@@ -128,7 +129,9 @@ def analyze(
         df_likert = pd.concat([df_likert, df_numeral], axis=1, join="outer")
 
     # clustering
-    df_likert_dropna = df_likert.dropna(axis=1)
+    if add_numeral:
+        df_likert_dropna = df_likert.drop(columns=df_numeral.columns)
+    df_likert_dropna = df_likert_dropna.dropna(axis=1)
     df_likert_dropna = StandardScaler().fit_transform(df_likert_dropna)
     best_k, scores, cluster_model = find_best_k(df_likert_dropna)
     fig_c_elbow, ax = plt.subplots(figsize=(10, 10))
@@ -137,7 +140,10 @@ def analyze(
 
     fig_c_scatters = []
     for j, embedding in enumerate(
-        [MDS(n_components=2), TSNE(n_components=2, perplexity=20)]
+        [
+            MDS(n_components=2, normalized_stress="auto"),
+            TSNE(n_components=2, perplexity=2),
+        ]
     ):
         emb_res = pd.DataFrame(
             embedding.fit_transform(df_likert_dropna), index=df_likert_dropna.index
@@ -149,7 +155,7 @@ def analyze(
         # annotate index
         sns.scatterplot(data=emb_res, x=0, y=1, hue="cluster", ax=ax)
         for i, row in emb_res.iterrows():
-            ax.annotate(i, (row[0], row[1]))
+            ax.annotate(i, (row.iat[0], row.iat[1]))
 
     # calculate mean and std for each group per row
     df_likert_grouped = df_likert.groupby(level="group", axis=1, sort=False)
@@ -163,6 +169,8 @@ def analyze(
         df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(
             axis=1
         )
+    fig_mean = plt.figure()
+    df_likert_mean["mean"].plot(kind="barh", figsize=(10, 15))
 
     # calculate corr
     df_likert_mean_corr = df_likert_mean.corr()
@@ -222,13 +230,21 @@ def analyze(
     df_likert_colwise.plot(kind="barh", subplots=True, figsize=(10, 15))
     fig_colwise = plt.gcf()
 
+    idx_unique = df.index.unique()
     # export to html
     dfs_to_write = [
-        "<h1>分析結果</h1>" f"最終更新: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "<h1>分析結果</h1>"
+        f"最終更新: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')} "
+        f"最終回答: {last_timestamp} 回答数: {len(df)} 指導教員数: {len(idx_unique)}/47 "
+        f"機械A: {(~idx_unique.str.contains('機械B')).sum()}/32 "
+        f"({(~idx_unique.str.contains('機械B')).sum()/32:.2%}) "
+        f"機械B: {(idx_unique.str.contains('機械B')).sum()}/15 "
+        f"({(idx_unique.str.contains('機械B')).sum()/15:.2%}) ",
         "自由記述",
         df_free,
         "回答ごとのグループに関する平均（質問によって、良い方向の回答が高い値になるように変換しております）",
         df_likert_mean.round(2),
+        fig_mean,
         "クラスタリング（失敗）",
         fig_c_elbow,
         *fig_c_scatters,
@@ -242,7 +258,9 @@ def analyze(
         "グループに関する統計値",
         df_likert_colwise.round(2),
         fig_colwise,
-        "選択型",
+        "選択型（質問によって、良い方向の回答が高い値になるように変換しております）",
         df_likert,
+        "生の値",
+        df,
     ]
     export_multiple_frames_to_html(dfs_to_write, Path(out_path))
