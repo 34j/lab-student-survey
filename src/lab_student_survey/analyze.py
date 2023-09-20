@@ -1,16 +1,32 @@
 from __future__ import annotations
 
-from io import StringIO
+import base64
+from io import BytesIO, StringIO
+from logging import getLogger
 from pathlib import Path
 
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.style
+import matplotx
+import numpy as np
 import pandas as pd
 import pingouin as pg
+import seaborn as sns
+from matplotlib.figure import Figure
+from scipy.stats import pearsonr
 
 LIKERT_SCALE = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
 
+matplotlib.style.use(matplotx.styles.dracula)
+matplotlib.rcParams["font.family"] = "Yu Gothic"
+
+
+LOG = getLogger(__name__)
+
 
 def export_multiple_frames_to_html(
-    dfs: list[pd.DataFrame | pd.Series | str], path: Path | str
+    dfs: list[pd.DataFrame | pd.Series | str | Figure], path: Path | str
 ) -> None:
     dfs = [df.to_frame() if isinstance(df, pd.Series) else df for df in dfs]
     with open(path, "w") as f:
@@ -18,6 +34,17 @@ def export_multiple_frames_to_html(
         for df in dfs:
             if isinstance(df, str):
                 f.write(f"<h2>{df}</h2>")
+            elif isinstance(df, Figure):
+                with BytesIO() as buf:
+                    try:
+                        df.tight_layout()
+                    except Exception as e:
+                        LOG.warning(e)
+                    df.savefig(buf, format="png")
+                    f.write(
+                        "<img src='data:image/png;base64,"
+                        f"{base64.b64encode(buf.getvalue()).decode('utf-8')}'/>"
+                    )
             else:
                 f.write(df.to_html())
         f.write("</body></html>")
@@ -25,7 +52,9 @@ def export_multiple_frames_to_html(
 
 def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
     with StringIO(csv_content) as f:
-        df = pd.read_csv(f, index_col=[2, 0], header=0)
+        df = pd.read_csv(f, index_col=[2], header=0)
+    df.drop(columns=["タイムスタンプ"])
+    df = df.sort_index(axis=0)
 
     # get metadata
     metadata_path = Path("metadata.csv")
@@ -42,6 +71,7 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
             "Using Microsoft Excel may cause encoding problems. "
         )
     df_meta = pd.read_csv(metadata_path, index_col=0, header=0)
+    df_meta["group"] = df_meta["group"].astype(object)
 
     metadata_group_name_path = Path("metadata_group_name.csv")
     if metadata_group_name_path.exists():
@@ -80,6 +110,13 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
 
     # calculate corr
     df_likert_mean_corr = df_likert_mean.corr()
+    fig_corr, ax_corr = plt.subplots(figsize=(10, 10))
+    sns.heatmap(df_likert_mean_corr, annot=True, ax=ax_corr)
+
+    # calculate p-values
+    df_likert_mean_pval = df_likert_mean.corr(
+        method=lambda x, y: pearsonr(x, y)[1]
+    ) - np.eye(len(df_likert_mean_corr))
 
     # calculate mean and std for each column
     df_likert_grouped_colwise = df_likert.T.groupby(level="group", axis=0, sort=False)
@@ -87,25 +124,59 @@ def analyze(csv_content: str, *, out_path: Path | str = "output.html") -> None:
         df_likert_grouped_colwise.mean().mean(axis=1).rename("mean")
     )
     df_likert_std_colwise = df_likert_grouped_colwise.std().mean(axis=1).rename("std")
-    df_likert_alpha = df_likert_grouped.apply(lambda x: pg.cronbach_alpha(x)).rename(
-        "cronbach_alpha"
+
+    def _parse_cronbach_alpha(x: pd.Series) -> dict[str, object]:
+        a = pg.cronbach_alpha(x)
+        internal_consistency = {
+            0.9: "Excellent",
+            0.8: "Good",
+            0.7: "Acceptable",
+            0.6: "Questionable",
+            0.5: "Poor",
+            float("-inf"): "Unacceptable",
+        }
+        # internal_consistency = {
+        #     0.9: "<span style='color: #00ff00'>Excellent</span>",
+        #     0.8: "<span style='color: #00dd00'>Good</span>",
+        #     0.7: "<span style='color: #00bb00'>Acceptable</span>",
+        #     0.6: "<span style='color: #009900'>Questionable</span>",
+        #     0.5: "<span style='color: #007700'>Poor</span>",
+        #     float("-inf"): "<span style='color: #005500'>Unacceptable</span>"
+        # }
+        return {
+            "alpha": a[0],
+            "alpha_0.95": a[1],
+            "internal_consistency": internal_consistency[
+                max(filter(lambda x: x <= a[0], internal_consistency.keys()))
+            ],
+        }
+
+    df_likert_alpha = df_likert_grouped.apply(lambda x: _parse_cronbach_alpha(x)).apply(
+        pd.Series
     )
     df_likert_colwise = pd.concat(
         [df_liekrt_mean_colwise, df_likert_std_colwise, df_likert_alpha], axis=1
     )
+    df_likert_colwise.plot(kind="barh", subplots=True, figsize=(10, 15))
+    fig_colwise = plt.gcf()
 
     # export to html
     dfs_to_write = [
+        "<h1>分析結果</h1>" f"最終更新: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "自由記述",
         df_free,
         "回答ごとのグループに関する平均",
         df_likert_mean.round(2),
         "グループに関する平均の相関",
         df_likert_mean_corr.round(2),
+        fig_corr,
+        "グループに関する平均の相関のp値",
+        df_likert_mean_pval.round(2),
         "回答ごとのグループに関する分散",
         df_likert_std.round(2),
         "グループに関する統計値",
         df_likert_colwise.round(2),
+        fig_colwise,
         "選択型",
         df_likert,
     ]
