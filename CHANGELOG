@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.2.0 (2023-09-21)
+
+### Feature
+
+- Add scopes (#2) ([`3b8629b`](https://github.com/34j/lab-student-survey/commit/3b8629bd005756361df5e15d56c58cc8f23b835c))
+
 ## v0.1.0 (2023-09-21)
 
 ### Feature
