@@ -68,6 +68,8 @@ def main(
     out_file.Upload()
     if not IS_CI:
         LOG.info(f"✔✨HTML saved to {out_file['alternateLink']} and output.html")
+    else:
+        LOG.info("✔✨HTML saved")
 
     if pdf:
         pdf_path = Path(out_path).with_suffix(".pdf")
@@ -78,3 +80,5 @@ def main(
         out_file.Upload()
         if not IS_CI:
             LOG.info(f"✔✨PDF saved to {out_file['alternateLink']} and output.pdf")
+        else:
+            LOG.info("✔✨PDF saved")
