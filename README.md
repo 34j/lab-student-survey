@@ -31,6 +31,7 @@
 </p>
 
 Python package for lab student survey.
+A single command fetches the spreadsheet generated from Google Forms and uploads the analysis results to Google Drive.
 
 ## Usage
 
