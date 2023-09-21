@@ -15,6 +15,7 @@ import pingouin as pg
 import seaborn as sns
 import sklearn
 import sklearn.cluster
+from japanize_matplotlib import japanize
 from matplotlib.figure import Figure
 from scipy.stats import pearsonr
 from sklearn.discriminant_analysis import StandardScaler
@@ -25,6 +26,8 @@ sklearn.set_config(transform_output="pandas")
 
 LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
 TIMESTAMP_TEXT = "タイムスタンプ"
+HTML_FONT_FAMILY = "HeiseiKakuGo-W5"
+MATPLOTLIB_FONT_FAMILY = "IPAexGothic"
 
 LOG = getLogger(__name__)
 
@@ -101,7 +104,10 @@ def analyze(
     pdf: bool = True,
 ) -> None:
     matplotlib.style.use(matplotx.styles.dracula)
-    matplotlib.rcParams["font.family"] = "Yu Gothic"
+    if MATPLOTLIB_FONT_FAMILY == "IPAexGothic":
+        japanize()
+    else:
+        matplotlib.rcParams["font.family"] = MATPLOTLIB_FONT_FAMILY
 
     with StringIO(csv_content) as f:
         df = pd.read_csv(f, index_col=[2], header=0)
