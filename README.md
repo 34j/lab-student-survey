@@ -30,14 +30,61 @@
   <img src="https://img.shields.io/pypi/l/lab-student-survey.svg?style=flat-square" alt="License">
 </p>
 
-Python package for lab student survey
+Python package for lab student survey.
+A single command fetches the spreadsheet generated from Google Forms and uploads the analysis results to Google Drive.
+
+## Usage
+
+- Create `student-lab-survey` (or any name) project in Google Cloud Platform.
+- Enable `Google Drive API` in Google Cloud Platform.
+- Create a `Service Account` in Google Cloud Platform.
+- Download the `Service Account` credentials as JSON in Google Cloud Platform and save it as `service-secrets.json` in the working directory or set it as `GDRIVE_SERVICE_ACCOUNT` environment variable (via GitHub Secrets).
+- Create `student-lab-survey` (or any name) folder in Google Drive.
+- Add the `Service Account` email to the `student-lab-survey` folder with `Editor` permissions.
+- Create a `Google Form` for the lab student survey. The second question should be the name of the supervisor.
+- Create a `Google Sheet` in the `student-lab-survey` folder from the `Google Form`.
+- Create `metadata.csv` and `metadata_group_name.csv` in the working directory or `student-lab-survey` folder in Google Drive to specify the question groups. The former will be automatically generated in the working directory if it does not exist. The latter is optional.
+
+### Environment Variables
+
+- Set the `Google Sheet` ID as `LAB_STUDENT_SURVEY_FILE_ID` environment variable (via GitHub Secrets).
+- Set the `student-lab-survey` folder ID as `LAB_STUDENT_SURVEY_FOLDER_ID` environment variable (via GitHub Secrets). (Optional.) If not set, the parent folder ID of the `Google Sheet` will be used.
+- (Set the `Service Account` credentials as `GDRIVE_SERVICE_ACCOUNT` environment variable (via GitHub Secrets).)
+
+### Running commands
+
+```shell
+lss
+```
+
+### Github Actions
+
+```yaml
+name: Run lab-student-survey
+
+on:
+  schedule:
+    - cron: "0 * * * *" # every hour
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install and run lab-student-survey
+        run: pipx run lab-student-survey
+        env:
+          LAB_STUDENT_SURVEY_FILE_URL: ${{ secrets.LAB_STUDENT_SURVEY_FILE_URL }}
+          LAB_STUDENT_SURVEY_FOLDER_URL: ${{ secrets.LAB_STUDENT_SURVEY_FOLDER_URL }}
+          GDRIVE_SERVICE_SECRETS: ${{ secrets.GDRIVE_SERVICE_SECRETS }}
+```
 
 ## Installation
 
-Install this via pip (or your favourite package manager):
+Install this via pip or pipx (or your favourite package manager):
 
 ```shell
-pip install lab-student-survey
+pipx install lab-student-survey
 ```
 
 ## Contributors ✨

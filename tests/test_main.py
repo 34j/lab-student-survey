@@ -1,5 +1,17 @@
-from lab_student_survey.main import add
+import re
+
+from click.testing import CliRunner
+
+from lab_student_survey.cli import cli
 
 
-def test_add():
-    assert add(1, 1) == 2
+def test_main() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli)
+    try:
+        assert result.exit_code == 0
+    except AssertionError:
+        # hide URL in error message
+        raise AssertionError(
+            re.sub(r"https://[^\s]+", "https://...", result.output)
+        ) from None
