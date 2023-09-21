@@ -67,7 +67,7 @@ jobs:
         env: # NOTE: Modified
           LAB_STUDENT_SURVEY_FILE_URL: ${{ secrets.LAB_STUDENT_SURVEY_FILE_URL }}
           LAB_STUDENT_SURVEY_FOLDER_URL: ${{ secrets.LAB_STUDENT_SURVEY_FOLDER_URL }}
-          GDRIVE_SERVICE_SECRETS: ${{ GDRIVE_SERVICE_SECRETS }}
+          GDRIVE_SERVICE_SECRETS: ${{ secrets.GDRIVE_SERVICE_SECRETS }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
