@@ -34,7 +34,7 @@ matplotx = "^0.3.10"
 xhtml2pdf = "^0.2.11"
 
 [tool.poetry.scripts]
-labo-student-survey = "lab_student_survey.cli:lss"
+lab-student-survey = "lab_student_survey.cli:lss"
 lss = "lab_student_survey.cli:cli"
 
 [tool.poetry.group.dev.dependencies]
