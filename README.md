@@ -89,7 +89,7 @@ pipx install lab-student-survey
 
 ## Alternatives
 
-As there are too few people in a lab, with the effect of diminishing anonymity, these websites seem to be hardly functioning at all.
+As far as I could find, there is no repository on GitHub for this particular topic. Instead, you may want to check out the following alternative websites. However, as there are too few people in a lab, with the effect of diminishing anonymity, most of these websites do not seem to attract many reviews.
 
 ### 国内
 
