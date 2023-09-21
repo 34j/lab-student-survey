@@ -87,6 +87,28 @@ Install this via pip or pipx (or your favourite package manager):
 pipx install lab-student-survey
 ```
 
+## Alternatives
+
+As there are too few people in a lab, with the effect of diminishing anonymity, these websites seem to be hardly functioning at all.
+
+### 国内
+
+- [理系研究室のクチコミサイト｜OpenLab](https://openlabmg.com/): **募集停止中**, 投稿するとAmazonギフト券（100円）がもらえる, ほとんど情報なし(100程度?)
+- [LabBase 研究室サーチ](https://lab-search.app.labbase.jp/): **入力方法不明**, 上よりも情報なし
+- [研究室ナビ](http://kenkyu-navi.com): リンク切れ [Forms](https://docs.google.com/forms/d/1s-c8tGOCGLv35KimBo9U7d3MKPyXpDl_QcHLozppAgM/viewform?edit_requested=true)
+
+[研究室　口コミ \-満載 \-学べます \- Search / X](https://twitter.com/search?q=%E7%A0%94%E7%A9%B6%E5%AE%A4%E3%80%80%E5%8F%A3%E3%82%B3%E3%83%9F%20-%E6%BA%80%E8%BC%89%20-%E5%AD%A6%E3%81%B9%E3%81%BE%E3%81%99)
+
+### 海外
+
+- [PI Review](https://pi-review.com/): 231 reviews (2021/09/21)
+- [GradPI](https://www.gradpi.com/): 329 reviews (2023/09/21), Must have a .edu or .ac.uk domain email address to even view the site.
+- [RMGA](https://ratemygradadvisor.com/): 3 reviews? (2021/09/21)
+- ratemypi.com, qcist.com: リンク切れ
+- [한국에너지공과대학교 에너지공학부 구근호 \- 김박사넷](https://phdkim.net/professor/9877/info): かなり多い(1000以上?)
+
+[pi rate website phd site:www\.reddit\.com \- Google Search](https://www.google.com/search?q=pi+rate+website+phd)
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
