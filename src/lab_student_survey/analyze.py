@@ -19,6 +19,7 @@ from matplotlib.figure import Figure
 from scipy.stats import pearsonr
 from sklearn.discriminant_analysis import StandardScaler
 from sklearn.manifold import MDS, TSNE
+from xhtml2pdf import pisa
 
 sklearn.set_config(transform_output="pandas")
 
@@ -29,11 +30,27 @@ LOG = getLogger(__name__)
 
 
 def export_multiple_frames_to_html(
-    dfs: list[pd.DataFrame | pd.Series | str | Figure], path: Path | str
+    dfs: list[pd.DataFrame | pd.Series | str | Figure],
+    path: Path | str,
+    pdf: bool = True,
 ) -> None:
     dfs = [df.to_frame() if isinstance(df, pd.Series) else df for df in dfs]
     with open(path, "w", encoding="utf-8") as f:
-        f.write("<html><meta charset='UTF-8'><body>")
+        # for xhtml2pdf support, set font-family to HeiseiKakuGo-W5
+        f.write(
+            """<html>
+<meta charset='UTF-8'>
+<style>
+ @page {
+        size: A1;
+    }
+    body { font-family: HeiseiKakuGo-W5; font-size: 5pt; }
+    table { font-family: HeiseiKakuGo-W5; font-size: 5pt; }
+    th { font-family: HeiseiKakuGo-W5; font-size: 5pt; }
+    td { font-family: HeiseiKakuGo-W5; font-size: 5pt; }
+</style>
+<body>"""
+        )
         for df in dfs:
             if isinstance(df, str):
                 f.write(f"<h2>{df}</h2>")
@@ -53,6 +70,15 @@ def export_multiple_frames_to_html(
                 f.write(df.to_html().replace("\\n", "<br>"))
         f.write("</body></html>")
 
+    if pdf:
+        with Path(path).with_suffix(".pdf").open("wb") as f:
+            pisa.CreatePDF(
+                Path(path).read_text(encoding="utf-8"),
+                f,
+                encoding="utf-8",
+                link_callback=lambda uri, _: uri.replace(" ", "%20"),
+            )
+
 
 def find_best_k(
     X: pd.DataFrame, max_k: int = 10
@@ -68,7 +94,11 @@ def find_best_k(
 
 
 def analyze(
-    csv_content: str, *, out_path: Path | str = "output.html", add_numeral: bool = True
+    csv_content: str,
+    *,
+    out_path: Path | str = "output.html",
+    add_numeral: bool = True,
+    pdf: bool = True,
 ) -> None:
     matplotlib.style.use(matplotx.styles.dracula)
     matplotlib.rcParams["font.family"] = "Yu Gothic"
@@ -133,7 +163,7 @@ def analyze(
         df_likert_dropna = df_likert.drop(columns=df_numeral.columns)
     df_likert_dropna = df_likert_dropna.dropna(axis=1)
     df_likert_dropna = StandardScaler().fit_transform(df_likert_dropna)
-    best_k, scores, cluster_model = find_best_k(df_likert_dropna)
+    best_k, scores, cluster_model = find_best_k(df_likert_dropna, max_k=3)
     fig_c_elbow, ax = plt.subplots(figsize=(10, 10))
     ax.set_title("Elbow method for optimal k")
     ax.plot(range(1, len(scores) + 1), scores)
@@ -263,4 +293,4 @@ def analyze(
         "生の値",
         df,
     ]
-    export_multiple_frames_to_html(dfs_to_write, Path(out_path))
+    export_multiple_frames_to_html(dfs_to_write, Path(out_path), pdf=pdf)
