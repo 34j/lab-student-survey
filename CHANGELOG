@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.1 (2023-09-21)
+
+### Fix
+
+- Add `pdfkit_font_family` and replace with it (#7) ([`38e45a9`](https://github.com/34j/lab-student-survey/commit/38e45a9c145a00fb4617e5ce94ead9fb438a1786))
+
 ## v0.4.0 (2023-09-21)
 
 ### Feature
