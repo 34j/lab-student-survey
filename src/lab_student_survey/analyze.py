@@ -28,6 +28,7 @@ LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらと�
 TIMESTAMP_TEXT = "タイムスタンプ"
 HTML_FONT_FAMILY = "HeiseiKakuGo-W5"
 MATPLOTLIB_FONT_FAMILY = "IPAexGothic"
+PRIVACY_TEXT = "公開範囲"
 
 LOG = getLogger(__name__)
 
@@ -102,6 +103,7 @@ def analyze(
     out_path: Path | str = "output.html",
     add_numeral: bool = True,
     pdf: bool = True,
+    privacy_scopes: list[str] | None = None,
 ) -> None:
     matplotlib.style.use(matplotx.styles.dracula)
     if MATPLOTLIB_FONT_FAMILY == "IPAexGothic":
@@ -112,6 +114,9 @@ def analyze(
     with StringIO(csv_content) as f:
         df = pd.read_csv(f, index_col=[2], header=0)
     last_timestamp = df[TIMESTAMP_TEXT].max()
+    PRIVACY_COL = df.columns[df.columns.str.contains(PRIVACY_TEXT)].tolist()[0]
+    if privacy_scopes is not None:
+        df = df[df[PRIVACY_COL].str.contains("|".join(privacy_scopes), regex=True)]
     df = df.drop(columns=[TIMESTAMP_TEXT])
     df = df.sort_index(axis=0)
 
@@ -275,7 +280,9 @@ def analyze(
         f"機械A: {(~idx_unique.str.contains('機械B')).sum()}/32 "
         f"({(~idx_unique.str.contains('機械B')).sum()/32:.2%}) "
         f"機械B: {(idx_unique.str.contains('機械B')).sum()}/15 "
-        f"({(idx_unique.str.contains('機械B')).sum()/15:.2%}) ",
+        f"({(idx_unique.str.contains('機械B')).sum()/15:.2%}) "
+        f"{PRIVACY_TEXT}: "
+        + (", ".join(privacy_scopes) if privacy_scopes is not None else "全て"),
         "自由記述",
         df_free,
         "回答ごとのグループに関する平均（質問によって、良い方向の回答が高い値になるように変換しております）",
