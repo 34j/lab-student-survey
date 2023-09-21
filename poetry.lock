@@ -1494,6 +1494,18 @@ six = "*"
 test = ["pytest", "pytest-cov", "scipy"]
 
 [[package]]
+name = "pdfkit"
+version = "1.0.0"
+description = "Wkhtmltopdf python wrapper to convert html to pdf using the webkit rendering engine and qt"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pdfkit-1.0.0-py2-none-any.whl", hash = "sha256:cc122e5aed594198ff7aaa566f2950d2163763576ab891c161bb1f6c630f5a8e"},
+    {file = "pdfkit-1.0.0-py3-none-any.whl", hash = "sha256:a7a4ca0d978e44fa8310c4909f087052430a6e8e0b1dd7ceef657f139789f96f"},
+    {file = "pdfkit-1.0.0.tar.gz", hash = "sha256:992f821e1e18fc8a0e701ecae24b51a2d598296a180caee0a24c0af181da02a9"},
+]
+
+[[package]]
 name = "pillow"
 version = "10.0.1"
 description = "Python Imaging Library (Fork)"
@@ -2721,4 +2733,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "5ba0c1c0d9c99a6b45b4e6f43288bd3d45b98ba1ccefdac94a8411f7fc8b592b"
+content-hash = "43c0d1e61146be418833a7e28133abf318fefc278bc0ec3e2a2cd9f23a2cd453"
