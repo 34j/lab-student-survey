@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install and run lab-student-survey
-        run: pipx run lab-student-survey
+        run: pipx run lab-student-survey && lab-student-survey -p ECCS,CC0
         env:
           LAB_STUDENT_SURVEY_FILE_URL: ${{ secrets.LAB_STUDENT_SURVEY_FILE_URL }}
           LAB_STUDENT_SURVEY_FOLDER_URL: ${{ secrets.LAB_STUDENT_SURVEY_FOLDER_URL }}

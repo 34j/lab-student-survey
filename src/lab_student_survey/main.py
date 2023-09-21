@@ -46,6 +46,7 @@ def main(
     out_path: Path | str = "output.html",
     folder_url: str | None = None,
     pdf: bool = True,
+    privacy_scopes: list[str] | None = None,
 ) -> None:
     file_id = file_url.split("/")[-1].split("?")[0]
     drive = get_drive()
@@ -58,7 +59,7 @@ def main(
             LOG.info(f"Downloading {n}...")
             metadata_file.GetContentFile(n)
 
-    analyze(csv_content, out_path=out_path, pdf=pdf)
+    analyze(csv_content, out_path=out_path, pdf=pdf, privacy_scopes=privacy_scopes)
 
     folder_id = (
         in_file["parents"][0]["id"] if folder_url is None else folder_url.split("/")[-1]
@@ -67,7 +68,7 @@ def main(
     out_file.SetContentFile(out_path)
     out_file.Upload()
     if not IS_CI:
-        LOG.info(f"✔✨HTML saved to {out_file['alternateLink']} and output.html")
+        LOG.info(f"✔✨HTML saved to {out_file['alternateLink']} and {out_path}")
     else:
         LOG.info("✔✨HTML saved")
 
@@ -79,6 +80,6 @@ def main(
         out_file.SetContentFile(pdf_path)
         out_file.Upload()
         if not IS_CI:
-            LOG.info(f"✔✨PDF saved to {out_file['alternateLink']} and output.pdf")
+            LOG.info(f"✔✨PDF saved to {out_file['alternateLink']} and {pdf_path}")
         else:
             LOG.info("✔✨PDF saved")
