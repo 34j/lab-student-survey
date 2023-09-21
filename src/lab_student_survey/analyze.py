@@ -89,7 +89,7 @@ def find_best_k(
 ) -> tuple[int, list[float], sklearn.cluster.KMeans]:
     scores = []
     models = []
-    for k in range(1, max_k + 1):
+    for k in range(1, min(max_k, len(X)) + 1):
         model = sklearn.cluster.KMeans(n_clusters=k, n_init="auto")
         model.fit(X)
         scores.append(model.inertia_)
@@ -183,8 +183,12 @@ def analyze(
     for j, embedding in enumerate(
         [
             MDS(n_components=2, normalized_stress="auto"),
-            TSNE(n_components=2, perplexity=2),
         ]
+        + (
+            [TSNE(n_components=2, perplexity=min(2, len(df_likert_dropna) - 1))]
+            if len(df_likert_dropna) > 1
+            else []
+        )
     ):
         emb_res = pd.DataFrame(
             embedding.fit_transform(df_likert_dropna), index=df_likert_dropna.index
@@ -214,62 +218,74 @@ def analyze(
     df_likert_mean["mean"].plot(kind="barh", figsize=(10, 15))
 
     # calculate corr
-    df_likert_mean_corr = df_likert_mean.corr()
-    fig_corr, ax_corr = plt.subplots(figsize=(10, 10))
-    sns.heatmap(df_likert_mean_corr, annot=True, ax=ax_corr)
+    if len(df_likert_mean) == 1:
+        df_likert_mean_corr = pd.DataFrame()
+        fig_corr = plt.figure()
+        df_likert_mean_pval = pd.DataFrame()
+        df_likert_std = pd.DataFrame()
+        df_likert_colwise = pd.DataFrame()
+        fig_colwise = plt.figure()
+    else:
+        df_likert_mean_corr = df_likert_mean.corr()
+        fig_corr, ax_corr = plt.subplots(figsize=(10, 10))
+        sns.heatmap(df_likert_mean_corr, annot=True, ax=ax_corr)
 
-    # calculate p-values
-    df_likert_mean_pval = df_likert_mean.corr(
-        method=lambda x, y: pearsonr(x, y)[1]
-    ) - np.eye(len(df_likert_mean_corr))
+        # calculate p-values
+        df_likert_mean_pval = df_likert_mean.corr(
+            method=lambda x, y: pearsonr(x, y)[1]
+        ) - np.eye(len(df_likert_mean_corr))
 
-    # calculate mean and std for each column
-    df_likert_grouped_colwise = df_likert.T.groupby(level="group", axis=0, sort=False)
-    df_liekrt_mean_colwise = (
-        df_likert_grouped_colwise.mean().mean(axis=1).rename("mean")
-    )
-    df_likert_std_colwise = df_likert_grouped_colwise.std().mean(axis=1).rename("std")
+        # calculate mean and std for each column
+        df_likert_grouped_colwise = df_likert.T.groupby(
+            level="group", axis=0, sort=False
+        )
+        df_liekrt_mean_colwise = (
+            df_likert_grouped_colwise.mean().mean(axis=1).rename("mean")
+        )
+        df_likert_std_colwise = (
+            df_likert_grouped_colwise.std().mean(axis=1).rename("std")
+        )
 
-    def _parse_cronbach_alpha(x: pd.Series) -> dict[str, object]:
-        if x.shape[1] <= 1:
-            return {
-                "alpha": float("nan"),
-                "alpha_0.95": float("nan"),
-                "internal_consistency": "N/A",
+        def _parse_cronbach_alpha(x: pd.Series) -> dict[str, object]:
+            if x.shape[1] <= 1:
+                return {
+                    "alpha": float("nan"),
+                    "alpha_0.95": float("nan"),
+                    "internal_consistency": "N/A",
+                }
+            a = pg.cronbach_alpha(x)
+            internal_consistency = {
+                0.9: "Excellent",
+                0.8: "Good",
+                0.7: "Acceptable",
+                0.6: "Questionable",
+                0.5: "Poor",
+                float("-inf"): "Unacceptable",
             }
-        a = pg.cronbach_alpha(x)
-        internal_consistency = {
-            0.9: "Excellent",
-            0.8: "Good",
-            0.7: "Acceptable",
-            0.6: "Questionable",
-            0.5: "Poor",
-            float("-inf"): "Unacceptable",
-        }
-        # internal_consistency = {
-        #     0.9: "<span style='color: #00ff00'>Excellent</span>",
-        #     0.8: "<span style='color: #00dd00'>Good</span>",
-        #     0.7: "<span style='color: #00bb00'>Acceptable</span>",
-        #     0.6: "<span style='color: #009900'>Questionable</span>",
-        #     0.5: "<span style='color: #007700'>Poor</span>",
-        #     float("-inf"): "<span style='color: #005500'>Unacceptable</span>"
-        # }
-        return {
-            "alpha": a[0],
-            "alpha_0.95": a[1],
-            "internal_consistency": internal_consistency[
-                max(filter(lambda x: x <= a[0], internal_consistency.keys()))
-            ],
-        }
+            # internal_consistency = {
+            #     0.9: "<span style='color: #00ff00'>Excellent</span>",
+            #     0.8: "<span style='color: #00dd00'>Good</span>",
+            #     0.7: "<span style='color: #00bb00'>Acceptable</span>",
+            #     0.6: "<span style='color: #009900'>Questionable</span>",
+            #     0.5: "<span style='color: #007700'>Poor</span>",
+            #     float("-inf"): "<span style='color: #005500'>Unacceptable</span>"
+            # }
+            return {
+                "alpha": a[0],
+                "alpha_0.95": a[1],
+                "internal_consistency": internal_consistency[
+                    max(filter(lambda x: x <= a[0], internal_consistency.keys()))
+                ],
+            }
 
-    df_likert_alpha = df_likert_grouped.apply(lambda x: _parse_cronbach_alpha(x)).apply(
-        pd.Series
-    )
-    df_likert_colwise = pd.concat(
-        [df_liekrt_mean_colwise, df_likert_std_colwise, df_likert_alpha], axis=1
-    )
-    df_likert_colwise.plot(kind="barh", subplots=True, figsize=(10, 15))
-    fig_colwise = plt.gcf()
+        df_likert_alpha = df_likert_grouped.apply(
+            lambda x: _parse_cronbach_alpha(x)
+        ).apply(pd.Series)
+        df_likert_colwise = pd.concat(
+            [df_liekrt_mean_colwise, df_likert_std_colwise, df_likert_alpha], axis=1
+        )
+        df_likert_colwise.plot(kind="barh", subplots=True, figsize=(10, 15))
+        fig_colwise = plt.gcf()
 
     idx_unique = df.index.unique()
     # export to html
