@@ -8,9 +8,9 @@ from pathlib import Path
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.style
-import matplotx
 import numpy as np
 import pandas as pd
+import pdfkit
 import pingouin as pg
 import seaborn as sns
 import sklearn
@@ -75,13 +75,20 @@ def export_multiple_frames_to_html(
         f.write("</body></html>")
 
     if pdf:
-        with Path(path).with_suffix(".pdf").open("wb") as f:
-            pisa.CreatePDF(
-                Path(path).read_text(encoding="utf-8"),
-                f,
-                encoding="utf-8",
-                link_callback=lambda uri, _: uri.replace(" ", "%20"),
-            )
+        pdf_path = Path(path).with_suffix(".pdf")
+        try:
+            with open(path, encoding="utf-8") as f:
+                pdfkit.from_file(f, pdf_path)
+        except Exception as e:
+            LOG.exception(e)
+            LOG.warning("Failed to convert to pdf using pdfkit, trying xhtml2pdf")
+            with Path(path).with_suffix(".pdf").open("wb") as f:
+                pisa.CreatePDF(
+                    Path(path).read_text(encoding="utf-8"),
+                    f,
+                    encoding="utf-8",
+                    link_callback=lambda uri, _: uri.replace(" ", "%20"),
+                )
 
 
 def find_best_k(
@@ -105,7 +112,7 @@ def analyze(
     pdf: bool = True,
     privacy_scopes: list[str] | None = None,
 ) -> None:
-    matplotlib.style.use(matplotx.styles.dracula)
+    # matplotlib.style.use(matplotx.styles.dracula)
     if MATPLOTLIB_FONT_FAMILY == "IPAexGothic":
         japanize()
     else:
@@ -175,7 +182,7 @@ def analyze(
     df_likert_dropna = df_likert_dropna.dropna(axis=1)
     df_likert_dropna = StandardScaler().fit_transform(df_likert_dropna)
     best_k, scores, cluster_model = find_best_k(df_likert_dropna, max_k=3)
-    fig_c_elbow, ax = plt.subplots(figsize=(10, 10))
+    fig_c_elbow, ax = plt.subplots()
     ax.set_title("Elbow method for optimal k")
     ax.plot(range(1, len(scores) + 1), scores)
 
@@ -194,7 +201,7 @@ def analyze(
             embedding.fit_transform(df_likert_dropna), index=df_likert_dropna.index
         )
         emb_res["cluster"] = cluster_model.predict(df_likert_dropna)
-        fig_c_scatter, ax = plt.subplots(figsize=(10, 10))
+        fig_c_scatter, ax = plt.subplots(figsize=(7, 7))
         fig_c_scatters.append(fig_c_scatter)
         ax.set_title(f"Scatter plot of {embedding.__class__.__name__}")
         # annotate index
@@ -214,8 +221,14 @@ def analyze(
         df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(
             axis=1
         )
-    fig_mean = plt.figure()
-    df_likert_mean["mean"].plot(kind="barh", figsize=(10, 15))
+    fig_mean, ax = plt.subplots(figsize=(12, 10), ncols=2)
+    sns.barplot(
+        y=df_likert_mean["mean"].index, x=df_likert_mean["mean"], orient="h", ax=ax[0]
+    )
+    df_likert_mean.sort_index(axis=0, inplace=False, ascending=False).drop(
+        columns=list(df_numeral_columns) + ["mean"], inplace=False
+    ).plot(kind="barh", ax=ax[1], stacked=True)
+    # sns.barplot(df_likert_mean, orient="h", ax=ax[1])
 
     # calculate corr
     if len(df_likert_mean) == 1:
@@ -229,6 +242,12 @@ def analyze(
         df_likert_mean_corr = df_likert_mean.corr()
         fig_corr, ax_corr = plt.subplots(figsize=(10, 10))
         sns.heatmap(df_likert_mean_corr, annot=True, ax=ax_corr)
+        if add_numeral:
+            fig_corr_dropped, ax_corr_dropped = plt.subplots(figsize=(10, 10))
+            df_corr_dropped = df_likert_mean_corr.drop(
+                index=df_numeral_columns, columns=df_numeral_columns
+            )
+            sns.heatmap(df_corr_dropped, annot=True, ax=ax_corr_dropped)
 
         # calculate p-values
         df_likert_mean_pval = df_likert_mean.corr(
@@ -284,7 +303,12 @@ def analyze(
         df_likert_colwise = pd.concat(
             [df_liekrt_mean_colwise, df_likert_std_colwise, df_likert_alpha], axis=1
         )
-        df_likert_colwise.plot(kind="barh", subplots=True, figsize=(10, 15))
+        if add_numeral:
+            df_likert_colwise.drop(index=df_numeral_columns, inplace=False).plot(
+                kind="barh", subplots=True, figsize=(10, 10), sharex=False
+            )
+        else:
+            df_likert_colwise.plot(kind="barh", subplots=True, figsize=(10, 10))
         fig_colwise = plt.gcf()
 
     idx_unique = df.index.unique()
@@ -310,6 +334,7 @@ def analyze(
         "グループに関する平均の相関",
         df_likert_mean_corr.round(2),
         fig_corr,
+        fig_corr_dropped if add_numeral else pd.DataFrame(),
         "グループに関する平均の相関のp値",
         df_likert_mean_pval.round(2),
         "回答ごとのグループに関する分散",
