@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install IPAexGothic
+        run: sudo apt-get install -y fonts-ipaexfont-gothic
       - name: Install wkhtmltopdf
         run: sudo apt-get install -y wkhtmltopdf
       - name: Install and run lab-student-survey

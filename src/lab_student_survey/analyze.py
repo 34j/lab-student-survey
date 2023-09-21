@@ -27,6 +27,7 @@ sklearn.set_config(transform_output="pandas")
 LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
 TIMESTAMP_TEXT = "タイムスタンプ"
 HTML_FONT_FAMILY = "HeiseiKakuGo-W5"
+PDFKIT_FONT_FAMILY = "IPAexGothic"
 MATPLOTLIB_FONT_FAMILY = "IPAexGothic"
 PRIVACY_TEXT = "公開範囲"
 
@@ -77,7 +78,12 @@ def export_multiple_frames_to_html(
     if pdf:
         pdf_path = Path(path).with_suffix(".pdf")
         try:
-            with open(path, encoding="utf-8") as f:
+            content = (
+                Path(path)
+                .read_text(encoding="utf-8")
+                .replace(HTML_FONT_FAMILY, PDFKIT_FONT_FAMILY)
+            )
+            with StringIO(content) as f:
                 pdfkit.from_file(f, pdf_path)
         except Exception as e:
             LOG.exception(e)
