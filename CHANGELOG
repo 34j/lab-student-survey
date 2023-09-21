@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0 (2023-09-21)
+
+### Feature
+
+- Allow only one sample (#3) ([`44d2d23`](https://github.com/34j/lab-student-survey/commit/44d2d2333238e9e680fc4dac84468cdb829ac09b))
+
 ## v0.2.0 (2023-09-21)
 
 ### Feature
