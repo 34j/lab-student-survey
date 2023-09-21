@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.0 (2023-09-21)
+
+### Feature
+
+- Use wkhtmltopdf (#6) ([`30aac44`](https://github.com/34j/lab-student-survey/commit/30aac44d9f8b8aeb811c5d9794ad4c1e409e516b))
+
+### Documentation
+
+- Update readme.md (#5) ([`5fc34bc`](https://github.com/34j/lab-student-survey/commit/5fc34bcd25b44b23cb5f05d4cfc0bd84c3c7ac7e))
+
 ## v0.3.0 (2023-09-21)
 
 ### Feature
