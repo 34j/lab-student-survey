@@ -13,4 +13,3 @@ def cli(file_url: str | None = None) -> None:
     if file_url is None:
         file_url = os.environ["LAB_STUDENT_SURVEY_FILE_URL"]
     main(file_url, folder_url=os.environ.get("LAB_STUDENT_SURVEY_FOLDER_URL"))
-    click.echo("Output saved to output.html")
