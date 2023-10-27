@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.4 (2023-10-27)
+
+### Fix
+
+- Update dependency pandas to v2.1.2 (#30) ([`7d2177f`](https://github.com/34j/lab-student-survey/commit/7d2177f215f99606801d8528f803c7dbeb9773e6))
+
 ## v0.4.3 (2023-10-17)
 
 ### Fix
