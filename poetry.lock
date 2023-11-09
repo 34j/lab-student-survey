@@ -2748,13 +2748,13 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 
 [[package]]
 name = "xhtml2pdf"
-version = "0.2.12"
+version = "0.2.13"
 description = "PDF generator using HTML and CSS"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "xhtml2pdf-0.2.12-py3-none-any.whl", hash = "sha256:9ff4df36c0f6e1a12873452e698ba06eb5598c5c3bfccf51498911b1ea42fc31"},
-    {file = "xhtml2pdf-0.2.12.tar.gz", hash = "sha256:d5e3d3f217cd75ca280fc3431a2ecc465a32170f1665cecb7d2067d16db86156"},
+    {file = "xhtml2pdf-0.2.13-py3-none-any.whl", hash = "sha256:8260305e044697a1d0c6d576153a0cc8ba0e89ea2446cf54f41f4a0e54e93e7d"},
+    {file = "xhtml2pdf-0.2.13.tar.gz", hash = "sha256:ab48cb6482e441a0d117f34ffab605181d2689e56a5e54a24d97f2b9d9a8776b"},
 ]
 
 [package.dependencies]
