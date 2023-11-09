@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.6 (2023-11-09)
+
+### Fix
+
+- Update dependency xhtml2pdf to v0.2.13 (#35) ([`fd2c61e`](https://github.com/34j/lab-student-survey/commit/fd2c61e5dd5dc977ade0c976f4e9cd48ecf7ca47))
+
 ## v0.4.5 (2023-11-08)
 
 ### Fix
