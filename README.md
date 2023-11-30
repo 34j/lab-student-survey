@@ -66,10 +66,6 @@ on:
   schedule:
     # every day at 00:00 UTC
     - cron: "0 0 * * *"
-  push:
-    branches:
-      - main
-  pull_request:
   workflow_dispatch:
 
 jobs:
