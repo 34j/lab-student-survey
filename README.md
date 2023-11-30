@@ -64,13 +64,21 @@ name: Run lab-student-survey
 
 on:
   schedule:
-    - cron: "0 * * * *" # every hour
+    # every day at 00:00 UTC
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Install wkhtmltopdf
+        run: sudo apt-get install -y wkhtmltopdf
       - name: Install and run lab-student-survey
         run: pipx run lab-student-survey
         env:
