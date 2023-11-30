@@ -2,7 +2,8 @@ name: Run lab-student-survey
 
 on:
   schedule:
-    - cron: "0 * * * *" # every hour
+    # every week
+    - cron: "0 0 * * 0"
 
 jobs:
   run:
