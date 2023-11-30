@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.9 (2023-11-30)
+
+### Fix
+
+- Fix corr calculation error when `n&lt;2` (#43) ([`92bac38`](https://github.com/34j/lab-student-survey/commit/92bac386ca11f5bc21dfa01fad76bf472b510b08))
+
 ## v0.4.8 (2023-11-13)
 
 ### Fix
