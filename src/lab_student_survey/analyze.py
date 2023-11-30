@@ -231,7 +231,8 @@ def analyze(
     # sns.barplot(df_likert_mean, orient="h", ax=ax[1])
 
     # calculate corr
-    if len(df_likert_mean) == 1:
+    print(df_likert_mean)
+    if len(df_likert_mean) < 2:
         df_likert_mean_corr = pd.DataFrame()
         fig_corr = plt.figure()
         df_likert_mean_pval = pd.DataFrame()
@@ -250,8 +251,15 @@ def analyze(
             sns.heatmap(df_corr_dropped, annot=True, ax=ax_corr_dropped)
 
         # calculate p-values
+        def try_peasonr(x: pd.Series, y: pd.Series) -> float:
+            try:
+                return pearsonr(x, y)[1]
+            except Exception as e:
+                LOG.warning(e)
+                return float("nan")
+
         df_likert_mean_pval = df_likert_mean.corr(
-            method=lambda x, y: pearsonr(x, y)[1]
+            method=lambda x, y: try_peasonr(x, y)
         ) - np.eye(len(df_likert_mean_corr))
 
         # calculate mean and std for each column
@@ -293,7 +301,10 @@ def analyze(
                 "alpha": a[0],
                 "alpha_0.95": a[1],
                 "internal_consistency": internal_consistency[
-                    max(filter(lambda x: x <= a[0], internal_consistency.keys()))
+                    max(
+                        list(filter(lambda x: x <= a[0], internal_consistency.keys()))
+                        or [float("-inf")]
+                    )
                 ],
             }
 
