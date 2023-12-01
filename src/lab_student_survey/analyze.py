@@ -237,7 +237,6 @@ def analyze(
     # sns.barplot(df_likert_mean, orient="h", ax=ax[1])
 
     # calculate corr
-    print(df_likert_mean)
     if len(df_likert_mean) < 2:
         df_likert_mean_corr = pd.DataFrame()
         fig_corr = plt.figure()
