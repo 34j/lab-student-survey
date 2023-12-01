@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.10 (2023-12-01)
+
+### Fix
+
+- Remove unnecessary print() (#45) ([`49e4354`](https://github.com/34j/lab-student-survey/commit/49e4354306ecb456c11f4601f5a02a229bc8e104))
+
 ## v0.4.9 (2023-11-30)
 
 ### Fix
