@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.15 (2024-01-04)
+
+### Fix
+
+- Update dependency pydrive2 to v1.19.0 (#68) ([`139990a`](https://github.com/34j/lab-student-survey/commit/139990a8229820fefebc0e13c8de7e026c43d67d))
+
 ## v0.4.14 (2024-01-03)
 
 ### Fix
