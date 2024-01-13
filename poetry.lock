@@ -976,16 +976,6 @@ files = [
 ]
 
 [[package]]
-name = "littleutils"
-version = "0.2.2"
-description = "Small personal collection of python utility functions"
-optional = false
-python-versions = "*"
-files = [
-    {file = "littleutils-0.2.2.tar.gz", hash = "sha256:e6cae3a4203e530d51c9667ed310ffe3b1948f2876e3d69605b3de4b7d96916f"},
-]
-
-[[package]]
 name = "lxml"
 version = "4.9.3"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
@@ -1403,22 +1393,6 @@ files = [
 asn1crypto = ">=1.5.1"
 
 [[package]]
-name = "outdated"
-version = "0.2.2"
-description = "Check if a version of a PyPI package is outdated"
-optional = false
-python-versions = "*"
-files = [
-    {file = "outdated-0.2.2-py2.py3-none-any.whl", hash = "sha256:3e9c2ee6d17e86ae8cc7bb71d70c4172690121cda367155a30994742172678c8"},
-    {file = "outdated-0.2.2.tar.gz", hash = "sha256:4b7fdec88e36711120d096d485fc4d5035e4e5ffbd907cf3a6ce2af43058b970"},
-]
-
-[package.dependencies]
-littleutils = "*"
-requests = "*"
-setuptools = ">=44"
-
-[[package]]
 name = "packaging"
 version = "23.1"
 description = "Core utilities for Python packages"
@@ -1611,26 +1585,24 @@ tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "pa
 
 [[package]]
 name = "pingouin"
-version = "0.5.3"
+version = "0.5.4"
 description = "Pingouin: statistical package for Python"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pingouin-0.5.3-py2.py3-none-any.whl", hash = "sha256:85ba7a836eaadb590d6fc566b80e1e953f219eb2a6335c001574fabe2c544552"},
-    {file = "pingouin-0.5.3-py3-none-any.whl", hash = "sha256:055fb0385ec9c426086e6a62bb1f5d7a7a8a1ed6ddc058c6f529a54f6316456b"},
-    {file = "pingouin-0.5.3.tar.gz", hash = "sha256:7530eb7665d478b7d7da8cae3cdfca8ccb829b29eba1d1bf885fcbff3b23c64b"},
+    {file = "pingouin-0.5.4-py2.py3-none-any.whl", hash = "sha256:c3b1fdd2794b0f1b1d96a0fdc5d6d7207ead51b04083ae6c1f302e9ca4c7e408"},
+    {file = "pingouin-0.5.4.tar.gz", hash = "sha256:dd25ed2ab1ceb2f6b4dbc7d85c52df50b9cf661782fd792a30a7f51d0c025a07"},
 ]
 
 [package.dependencies]
-matplotlib = ">=3.0.2"
-numpy = ">=1.19"
-outdated = "*"
-pandas = ">=1.0"
-pandas-flavor = ">=0.2.0"
+matplotlib = "*"
+numpy = "*"
+pandas = ">=1.5"
+pandas-flavor = "*"
 scikit-learn = "*"
-scipy = ">=1.7"
-seaborn = ">=0.11"
-statsmodels = ">=0.13"
+scipy = "*"
+seaborn = "*"
+statsmodels = "*"
 tabulate = "*"
 
 [[package]]
