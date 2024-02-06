@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.19 (2024-02-06)
+
+### Fix
+
+- Update dependency numpy to v1.26.4 (#82) ([`5417cf0`](https://github.com/34j/lab-student-survey/commit/5417cf0c87e61b25c1487b78de616e987e771138))
+
 ## v0.4.18 (2024-01-23)
 
 ### Fix
