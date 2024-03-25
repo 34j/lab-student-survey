@@ -24,7 +24,13 @@ from xhtml2pdf import pisa
 
 sklearn.set_config(transform_output="pandas")
 
-LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
+LIKERT_SCALE_TEXTS = [
+    "全く当てはまる",
+    "当てはまる",
+    "どちらともいえない",
+    "あまり当てはまらない",
+    "全く当てはまらない",
+]
 TIMESTAMP_TEXT = "タイムスタンプ"
 HTML_FONT_FAMILY = "HeiseiKakuGo-W5"
 PDFKIT_FONT_FAMILY = "IPAexGothic"
