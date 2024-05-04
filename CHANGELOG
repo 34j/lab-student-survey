@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.24 (2024-05-04)
+
+### Fix
+
+- Update dependency tqdm to v4.66.4 (#102) ([`fd589f1`](https://github.com/34j/lab-student-survey/commit/fd589f10dfd6c43a6d5a11e9da1ea30918d1a5ca))
+
 ## v0.4.23 (2024-04-25)
 
 ### Fix
