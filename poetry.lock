@@ -1587,13 +1587,13 @@ tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "pa
 
 [[package]]
 name = "pingouin"
-version = "0.5.4"
+version = "0.5.5"
 description = "Pingouin: statistical package for Python"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "pingouin-0.5.4-py2.py3-none-any.whl", hash = "sha256:c3b1fdd2794b0f1b1d96a0fdc5d6d7207ead51b04083ae6c1f302e9ca4c7e408"},
-    {file = "pingouin-0.5.4.tar.gz", hash = "sha256:dd25ed2ab1ceb2f6b4dbc7d85c52df50b9cf661782fd792a30a7f51d0c025a07"},
+    {file = "pingouin-0.5.5-py3-none-any.whl", hash = "sha256:3156afe44ee5541131200848ee905937930757b615aca8eed8438ad4d4e20ef1"},
+    {file = "pingouin-0.5.5.tar.gz", hash = "sha256:2aac834128e99a4df8cffd8151c21adc7c42fe493e389c6fc2581b84e436ddd9"},
 ]
 
 [package.dependencies]
@@ -1601,11 +1601,15 @@ matplotlib = "*"
 numpy = "*"
 pandas = ">=1.5"
 pandas-flavor = "*"
-scikit-learn = "*"
+scikit-learn = ">=1.2"
 scipy = "*"
 seaborn = "*"
 statsmodels = "*"
 tabulate = "*"
+
+[package.extras]
+docs = ["numpydoc", "pydata-sphinx-theme", "sphinx (>7.0.0)", "sphinx-copybutton", "sphinx-design", "sphinx-notfound-page"]
+test = ["codecov", "coverage[toml] (>=5.3)", "mpmath", "openpyxl", "pytest (>=6)", "pytest-cov"]
 
 [[package]]
 name = "platformdirs"
