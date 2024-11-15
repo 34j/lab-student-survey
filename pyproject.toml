@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lab-student-survey"
-version = "0.4.26"
+version = "0.4.27"
 description = "Python package for lab student survey"
 authors = ["34j <34j.95a2p@simplelogin.com>"]
 license = "MIT"
