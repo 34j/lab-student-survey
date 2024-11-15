@@ -2692,13 +2692,13 @@ viz = ["matplotlib", "nc-time-axis", "seaborn"]
 
 [[package]]
 name = "xhtml2pdf"
-version = "0.2.15"
+version = "0.2.16"
 description = "PDF generator using HTML and CSS"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "xhtml2pdf-0.2.15-py3-none-any.whl", hash = "sha256:ba81ca18a236478eb0d98fffb2d55871642d19cb6927383932a1954111449e5d"},
-    {file = "xhtml2pdf-0.2.15.tar.gz", hash = "sha256:cc9c68551677f831d836e7fc94196fa777d3c4d500754aa4dc5c02d45c0e19d1"},
+    {file = "xhtml2pdf-0.2.16-py3-none-any.whl", hash = "sha256:b37040127627aee42f76f25ebbd5798308ffc93edaf4850a4d3dd894160ebb53"},
+    {file = "xhtml2pdf-0.2.16.tar.gz", hash = "sha256:7391adac12afb086561667cdc8d6ef0ac4afe5097bd97383622d42b6343dee71"},
 ]
 
 [package.dependencies]
@@ -2709,14 +2709,14 @@ pyHanko = ">=0.12.1"
 pyhanko-certvalidator = ">=0.19.5"
 pypdf = ">=3.1.0"
 python-bidi = ">=0.4.2"
-reportlab = ">=4.0.4,<4.1"
+reportlab = ">=4.0.4,<5"
 svglib = ">=1.2.1"
 
 [package.extras]
 docs = ["sphinx (>=6)", "sphinx-rtd-theme (>=0.5.0)"]
-pycairo = ["reportlab[pycairo] (>=4.0.4,<4.1)"]
+pycairo = ["reportlab[pycairo] (>=4.0.4,<5)"]
 release = ["build", "twine"]
-renderpm = ["reportlab[renderpm] (>=4.0.4,<4.1)"]
+renderpm = ["reportlab[renderpm] (>=4.0.4,<5)"]
 test = ["coverage (>=5.3)", "tomli (>=2.0.1)", "tox"]
 
 [[package]]
