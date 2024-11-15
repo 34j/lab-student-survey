@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.26 (2024-11-15)
+
+### Fix
+
+- Update dependency pingouin to v0.5.5 (#110) ([`f78c62f`](https://github.com/34j/lab-student-survey/commit/f78c62f9c1470fa03b41680c8c9038dcf7b3393b))
+
 ## v0.4.25 (2024-11-15)
 
 ### Fix
