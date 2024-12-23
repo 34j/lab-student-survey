@@ -35,8 +35,8 @@ def cli(
         file_url,
         folder_url=folder_url,
         out_path=out_path,
-        privacy_scopes=privacy_scopes.split(",")
-        if privacy_scopes is not None
-        else None,
+        privacy_scopes=(
+            privacy_scopes.split(",") if privacy_scopes is not None else None
+        ),
         pdf=pdf,
     )
