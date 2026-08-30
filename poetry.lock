@@ -1722,24 +1722,25 @@ files = [
 
 [[package]]
 name = "pydrive2"
-version = "1.19.0"
+version = "1.21.3"
 description = "Google Drive API made easy. Maintained fork of PyDrive."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "PyDrive2-1.19.0-py3-none-any.whl", hash = "sha256:5699f24cf13907d9556f1c6c33a913c9fcb4441c1b999a6204affc2d4d793aea"},
-    {file = "PyDrive2-1.19.0.tar.gz", hash = "sha256:21aea7da27635c2c3f7050e020206191f3b0305c6550315e6e8e3dd526f8b531"},
+    {file = "PyDrive2-1.21.3-py3-none-any.whl", hash = "sha256:843a304f500e71508162807001f5e19487f272e8ff5648f43582bd24c6250200"},
+    {file = "pydrive2-1.21.3.tar.gz", hash = "sha256:649b84d60c637bc7146485039535aa8f1254ad156423739f07e5d32507447c13"},
 ]
 
 [package.dependencies]
+cryptography = "<44"
 google-api-python-client = ">=1.12.5"
 oauth2client = ">=4.0.0"
-pyOpenSSL = ">=19.1.0"
+pyOpenSSL = ">=19.1.0,<=24.2.1"
 PyYAML = ">=3.0"
 
 [package.extras]
 fsspec = ["appdirs (>=1.4.3)", "fsspec (>=2021.07.0)", "funcy (>=1.14)", "tqdm (>=4.0.0)"]
-tests = ["black (==23.12.1)", "flake8", "flake8-docstrings", "funcy (>=1.14)", "importlib-resources (<6)", "pyinstaller", "pytest (>=4.6.0)", "pytest-mock", "timeout-decorator"]
+tests = ["black (==24.10.0)", "flake8", "flake8-docstrings", "funcy (>=1.14)", "importlib-resources (<6)", "pyinstaller", "pytest (>=4.6.0)", "pytest-mock", "timeout-decorator"]
 
 [[package]]
 name = "pygments"
