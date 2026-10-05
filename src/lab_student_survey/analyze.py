@@ -24,7 +24,13 @@ from xhtml2pdf import pisa
 
 sklearn.set_config(transform_output="pandas")
 
-LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
+LIKERT_SCALE_TEXTS = [
+    "全く当てはまる",
+    "当てはまる",
+    "どちらともいえない",
+    "あまり当てはまらない",
+    "全く当てはまらない",
+]
 TIMESTAMP_TEXT = "タイムスタンプ"
 HTML_FONT_FAMILY = "HeiseiKakuGo-W5"
 PDFKIT_FONT_FAMILY = "IPAexGothic"
@@ -42,8 +48,7 @@ def export_multiple_frames_to_html(
     dfs = [df.to_frame() if isinstance(df, pd.Series) else df for df in dfs]
     with open(path, "w", encoding="utf-8") as f:
         # for xhtml2pdf support, set font-family to HeiseiKakuGo-W5
-        f.write(
-            """<html>
+        f.write("""<html>
 <meta charset='UTF-8'>
 <style>
  @page {
@@ -54,8 +59,7 @@ def export_multiple_frames_to_html(
     th { font-family: HeiseiKakuGo-W5; font-size: 5pt; }
     td { font-family: HeiseiKakuGo-W5; font-size: 5pt; }
 </style>
-<body>"""
-        )
+<body>""")
         for df in dfs:
             if isinstance(df, str):
                 f.write(f"<h2>{df}</h2>")
