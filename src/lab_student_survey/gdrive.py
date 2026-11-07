@@ -11,6 +11,12 @@ LOG = getLogger(__name__)
 
 
 def get_auth() -> GoogleAuth:
+    """Authenticate with Google Drive using local or service credentials.
+
+    Returns:
+        An authenticated GoogleAuth instance.
+
+    """
     if Path("settings.yaml").exists():
         LOG.info("Using settings.yaml")
         auth = GoogleAuth("settings.yaml")
@@ -20,7 +26,7 @@ def get_auth() -> GoogleAuth:
             service_secrets = os.environ.get("GDRIVE_SERVICE_SECRETS")
             if service_secrets is not None:
                 LOG.info("Using GDRIVE_SERVICE_SECRETS")
-                Path("service-secrets.json").write_text(service_secrets)
+                Path("service-secrets.json").write_text(service_secrets, encoding="utf-8")
             else:
                 LOG.info("Using default settings")
                 auth = GoogleAuth()
@@ -36,8 +42,14 @@ def get_auth() -> GoogleAuth:
             }
         )
         auth.ServiceAuth()
-        return auth
+    return auth
 
 
 def get_drive() -> GoogleDrive:
+    """Create an authenticated Google Drive client.
+
+    Returns:
+        An authenticated GoogleDrive instance.
+
+    """
     return GoogleDrive(get_auth())
