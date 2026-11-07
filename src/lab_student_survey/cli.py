@@ -20,8 +20,10 @@ def cli(
     out_path: str | Path | None = None,
     folder_url: str | None = None,
     privacy_scopes: str | None = None,
+    *,
     pdf: bool = True,
 ) -> None:
+    """Run the lab student survey analysis command."""
     basicConfig(level=INFO)
     if file_url is None:
         file_url = os.environ["LAB_STUDENT_SURVEY_FILE_URL"]
@@ -35,8 +37,6 @@ def cli(
         file_url,
         folder_url=folder_url,
         out_path=out_path,
-        privacy_scopes=privacy_scopes.split(",")
-        if privacy_scopes is not None
-        else None,
+        privacy_scopes=privacy_scopes.split(",") if privacy_scopes is not None else None,
         pdf=pdf,
     )

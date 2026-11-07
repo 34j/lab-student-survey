@@ -5,9 +5,8 @@ from io import BytesIO, StringIO
 from logging import getLogger
 from pathlib import Path
 
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.style
 import numpy as np
 import pandas as pd
 import pdfkit
@@ -24,7 +23,14 @@ from xhtml2pdf import pisa
 
 sklearn.set_config(transform_output="pandas")
 
-LIKERT_SCALE_TEXTS = ["全く当てはまる", "当てはまる", "どちらともいえない", "あまり当てはまらない", "全く当てはまらない"]
+LIKERT_SCALE_TEXTS = [
+    "全く当てはまる",
+    "当てはまる",
+    "どちらともいえない",
+    "あまり当てはまらない",
+    "全く当てはまらない",
+]
+MIN_CORRELATION_ROWS = 2
 TIMESTAMP_TEXT = "タイムスタンプ"
 HTML_FONT_FAMILY = "HeiseiKakuGo-W5"
 PDFKIT_FONT_FAMILY = "IPAexGothic"
@@ -37,10 +43,12 @@ LOG = getLogger(__name__)
 def export_multiple_frames_to_html(
     dfs: list[pd.DataFrame | pd.Series | str | Figure],
     path: Path | str,
+    *,
     pdf: bool = True,
 ) -> None:
+    """Export data frames and figures to HTML and optionally PDF."""
     dfs = [df.to_frame() if isinstance(df, pd.Series) else df for df in dfs]
-    with open(path, "w", encoding="utf-8") as f:
+    with Path(path).open("w", encoding="utf-8") as f:
         # for xhtml2pdf support, set font-family to HeiseiKakuGo-W5
         f.write(
             """<html>
@@ -63,8 +71,8 @@ def export_multiple_frames_to_html(
                 with BytesIO() as buf:
                     try:
                         df.tight_layout()
-                    except Exception as e:
-                        LOG.warning(e)
+                    except (RuntimeError, ValueError) as e:
+                        LOG.warning("Failed to lay out figure: %s", e)
                     df.savefig(buf, format="png")
                     f.write(
                         "<img src='data:image/png;base64,"
@@ -79,14 +87,12 @@ def export_multiple_frames_to_html(
         pdf_path = Path(path).with_suffix(".pdf")
         try:
             content = (
-                Path(path)
-                .read_text(encoding="utf-8")
-                .replace(HTML_FONT_FAMILY, PDFKIT_FONT_FAMILY)
+                Path(path).read_text(encoding="utf-8").replace(HTML_FONT_FAMILY, PDFKIT_FONT_FAMILY)
             )
             with StringIO(content) as f:
                 pdfkit.from_file(f, pdf_path)
-        except Exception as e:
-            LOG.exception(e)
+        except OSError:
+            LOG.exception("Failed to convert HTML to PDF")
             LOG.warning("Failed to convert to pdf using pdfkit, trying xhtml2pdf")
             with Path(path).with_suffix(".pdf").open("wb") as f:
                 pisa.CreatePDF(
@@ -98,19 +104,31 @@ def export_multiple_frames_to_html(
 
 
 def find_best_k(
-    X: pd.DataFrame, max_k: int = 10
+    data: pd.DataFrame, max_k: int = 10
 ) -> tuple[int, list[float], sklearn.cluster.KMeans]:
-    scores = []
-    models = []
-    for k in range(1, min(max_k, len(X)) + 1):
+    """Find the K-means model with the lowest inertia.
+
+    Returns:
+        The best cluster count, all model scores, and the best model.
+
+    Raises:
+        RuntimeError: If a fitted model has no inertia.
+
+    """
+    scores: list[float] = []
+    models: list[sklearn.cluster.KMeans] = []
+    for k in range(1, min(max_k, len(data)) + 1):
         model = sklearn.cluster.KMeans(n_clusters=k, n_init="auto")
-        model.fit(X)
+        model.fit(data)
+        if model.inertia_ is None:
+            raise RuntimeError("K-means model has no inertia")
         scores.append(model.inertia_)
         models.append(model)
-    return np.argmin(scores) + 1, scores, models[np.argmin(scores)]
+    best_index = int(np.argmin(scores))
+    return best_index + 1, scores, models[best_index]
 
 
-def analyze(
+def analyze(  # noqa: C901
     csv_content: str,
     *,
     out_path: Path | str = "output.html",
@@ -118,18 +136,24 @@ def analyze(
     pdf: bool = True,
     privacy_scopes: list[str] | None = None,
 ) -> None:
+    """Analyze survey responses and export the results.
+
+    Raises:
+        RuntimeError: If the survey metadata file does not exist.
+
+    """
     # matplotlib.style.use(matplotx.styles.dracula)
     if MATPLOTLIB_FONT_FAMILY == "IPAexGothic":
         japanize()
     else:
-        matplotlib.rcParams["font.family"] = MATPLOTLIB_FONT_FAMILY
+        mpl.rcParams["font.family"] = MATPLOTLIB_FONT_FAMILY
 
     with StringIO(csv_content) as f:
         df = pd.read_csv(f, index_col=[2], header=0)
     last_timestamp = df[TIMESTAMP_TEXT].max()
-    PRIVACY_COL = df.columns[df.columns.str.contains(PRIVACY_TEXT)].tolist()[0]
+    privacy_col = df.columns[df.columns.str.contains(PRIVACY_TEXT)].tolist()[0]
     if privacy_scopes is not None:
-        df = df[df[PRIVACY_COL].str.contains("|".join(privacy_scopes), regex=True)]
+        df = df[df[privacy_col].str.contains("|".join(privacy_scopes), regex=True)]
     df = df.drop(columns=[TIMESTAMP_TEXT])
     df = df.sort_index(axis=0)
 
@@ -183,17 +207,18 @@ def analyze(
         df_likert = pd.concat([df_likert, df_numeral], axis=1, join="outer")
 
     # clustering
+    df_likert_dropna = df_likert
     if add_numeral:
         df_likert_dropna = df_likert.drop(columns=df_numeral.columns)
     df_likert_dropna = df_likert_dropna.dropna(axis=1)
     df_likert_dropna = StandardScaler().fit_transform(df_likert_dropna)
-    best_k, scores, cluster_model = find_best_k(df_likert_dropna, max_k=3)
+    _best_k, scores, cluster_model = find_best_k(df_likert_dropna, max_k=3)
     fig_c_elbow, ax = plt.subplots()
     ax.set_title("Elbow method for optimal k")
     ax.plot(range(1, len(scores) + 1), scores)
 
     fig_c_scatters = []
-    for j, embedding in enumerate(
+    for _j, embedding in enumerate(
         [
             MDS(n_components=2, normalized_stress="auto"),
         ]
@@ -213,31 +238,25 @@ def analyze(
         # annotate index
         sns.scatterplot(data=emb_res, x=0, y=1, hue="cluster", ax=ax)
         for i, row in emb_res.iterrows():
-            ax.annotate(i, (row.iat[0], row.iat[1]))
+            ax.annotate(str(i), (row.iloc[0], row.iloc[1]))
 
     # calculate mean and std for each group per row
-    df_likert_grouped = df_likert.groupby(level="group", axis=1, sort=False)
-    df_likert_mean = df_likert_grouped.mean()
+    df_likert_grouped = df_likert.T.groupby(level="group", sort=False)
+    df_likert_mean = df_likert_grouped.mean().T
     if add_numeral:
-        df_likert_mean["mean"] = df_likert_mean.drop(columns=df_numeral_columns).mean(
-            axis=1
-        )
-    df_likert_std = df_likert_grouped.std()
+        df_likert_mean["mean"] = df_likert_mean.drop(columns=df_numeral_columns).mean(axis=1)
+    df_likert_std = df_likert_grouped.std().T
     if add_numeral:
-        df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(
-            axis=1
-        )
+        df_likert_std["mean"] = df_likert_std.drop(columns=df_numeral_columns).mean(axis=1)
     fig_mean, ax = plt.subplots(figsize=(12, 10), ncols=2)
-    sns.barplot(
-        y=df_likert_mean["mean"].index, x=df_likert_mean["mean"], orient="h", ax=ax[0]
-    )
+    sns.barplot(y=df_likert_mean["mean"].index, x=df_likert_mean["mean"], orient="h", ax=ax[0])
     df_likert_mean.sort_index(axis=0, inplace=False, ascending=False).drop(
-        columns=list(df_numeral_columns) + ["mean"], inplace=False
+        columns=[*list(df_numeral_columns), "mean"], inplace=False
     ).plot(kind="barh", ax=ax[1], stacked=True)
     # sns.barplot(df_likert_mean, orient="h", ax=ax[1])
 
     # calculate corr
-    if len(df_likert_mean) < 2:
+    if len(df_likert_mean) < MIN_CORRELATION_ROWS:
         df_likert_mean_corr = pd.DataFrame()
         fig_corr = plt.figure()
         df_likert_mean_pval = pd.DataFrame()
@@ -259,26 +278,20 @@ def analyze(
         def try_peasonr(x: pd.Series, y: pd.Series) -> float:
             try:
                 return pearsonr(x, y)[1]
-            except Exception as e:
-                LOG.warning(e)
+            except ValueError as e:
+                LOG.warning("Failed to calculate Pearson correlation: %s", e)
                 return float("nan")
 
-        df_likert_mean_pval = df_likert_mean.corr(
-            method=lambda x, y: try_peasonr(x, y)
-        ) - np.eye(len(df_likert_mean_corr))
+        df_likert_mean_pval = df_likert_mean.corr(method=try_peasonr) - np.eye(
+            len(df_likert_mean_corr)
+        )
 
         # calculate mean and std for each column
-        df_likert_grouped_colwise = df_likert.T.groupby(
-            level="group", axis=0, sort=False
-        )
-        df_liekrt_mean_colwise = (
-            df_likert_grouped_colwise.mean().mean(axis=1).rename("mean")
-        )
-        df_likert_std_colwise = (
-            df_likert_grouped_colwise.std().mean(axis=1).rename("std")
-        )
+        df_likert_grouped_colwise = df_likert.T.groupby(level="group", sort=False)
+        df_liekrt_mean_colwise = df_likert_grouped_colwise.mean().mean(axis=1).rename("mean")
+        df_likert_std_colwise = df_likert_grouped_colwise.std().mean(axis=1).rename("std")
 
-        def _parse_cronbach_alpha(x: pd.Series) -> dict[str, object]:
+        def _parse_cronbach_alpha(x: pd.DataFrame) -> dict[str, object]:
             if x.shape[1] <= 1:
                 return {
                     "alpha": float("nan"),
@@ -313,9 +326,10 @@ def analyze(
                 ],
             }
 
-        df_likert_alpha = df_likert_grouped.apply(
-            lambda x: _parse_cronbach_alpha(x)
-        ).apply(pd.Series)
+        def _parse_group_alpha(group: pd.DataFrame) -> dict[str, object]:
+            return _parse_cronbach_alpha(group.T)
+
+        df_likert_alpha = df_likert_grouped_colwise.apply(_parse_group_alpha).apply(pd.Series)
         df_likert_colwise = pd.concat(
             [df_liekrt_mean_colwise, df_likert_std_colwise, df_likert_alpha], axis=1
         )
@@ -334,17 +348,19 @@ def analyze(
         f"最終更新: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')} "
         f"最終回答: {last_timestamp} 回答数: {len(df)} 指導教員数: {len(idx_unique)}/47 "
         f"機械A: {(~idx_unique.str.contains('機械B')).sum()}/32 "
-        f"({(~idx_unique.str.contains('機械B')).sum()/32:.2%}) "
+        f"({(~idx_unique.str.contains('機械B')).sum() / 32:.2%}) "
         f"機械B: {(idx_unique.str.contains('機械B')).sum()}/15 "
-        f"({(idx_unique.str.contains('機械B')).sum()/15:.2%}) "
-        f"{PRIVACY_TEXT}: "
-        + (", ".join(privacy_scopes) if privacy_scopes is not None else "全て"),
+        f"({(idx_unique.str.contains('機械B')).sum() / 15:.2%}) "
+        f"{PRIVACY_TEXT}: " + (", ".join(privacy_scopes) if privacy_scopes is not None else "全て"),
         "自由記述",
         df_free,
-        "回答ごとのグループに関する平均（質問によって、良い方向の回答が高い値になるように変換しております）",
+        (
+            "回答ごとのグループに関する平均 (質問によって、良い方向の回答が高い値になるように"
+            "変換しております)"
+        ),
         df_likert_mean.round(2),
         fig_mean,
-        "クラスタリング（失敗）",
+        "クラスタリング (失敗)",
         fig_c_elbow,
         *fig_c_scatters,
         "グループに関する平均の相関",
@@ -358,7 +374,7 @@ def analyze(
         "グループに関する統計値",
         df_likert_colwise.round(2),
         fig_colwise,
-        "選択型（質問によって、良い方向の回答が高い値になるように変換しております）",
+        "選択型 (質問によって、良い方向の回答が高い値になるように変換しております)",
         df_likert,
         "生の値",
         df,
