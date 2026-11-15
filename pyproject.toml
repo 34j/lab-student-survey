@@ -34,7 +34,7 @@ dependencies = [
   "pydrive2>=1.17",
   "setuptools>=77.0.3",
   "tqdm>=4.66.1",
-  "xhtml2pdf>=0.2.11",
+  "xhtml2pdf>=0.2.28",
 ]
 urls."Bug Tracker" = "https://github.com/34j/lab-student-survey/issues"
 urls.Changelog = "https://github.com/34j/lab-student-survey/blob/main/CHANGELOG.md"
